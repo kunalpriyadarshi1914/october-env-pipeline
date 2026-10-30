@@ -33,7 +33,7 @@ parameters:
     - 'chalega bhai'
     - 'nahi chalega bhai'
 
-pool: env-pool
+pool: kunal-pool
 
 stages:
 - stage: Scan
@@ -69,7 +69,7 @@ stages:
         provider: azurerm
         command: init
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        backendServiceArm: ' env1914svc'
+        backendServiceArm: ' kunal-svc'
         backendAzureRmStorageAccountName: 'parastg1914'
         backendAzureRmContainerName: 'parastgcontainer'
         backendAzureRmKey: 'prod.tfstate'
@@ -80,7 +80,7 @@ stages:
         provider: azurerm
         command: plan
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        environmentServiceNameAzureRM: ' env1914svc'
+        environmentServiceNameAzureRM: 'kunal-svc'
 
 - stage: Approval
   displayName: 'Approve Prod Apply'
@@ -127,7 +127,7 @@ stages:
         provider: azurerm
         command: init
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        backendServiceArm: ' env1914svc'
+        backendServiceArm: ' kunal-svc'
         backendAzureRmStorageAccountName: 'parastg1914'
         backendAzureRmContainerName: 'parastgcontainer'
         backendAzureRmKey: 'prod.tfstate'
@@ -138,5 +138,5 @@ stages:
         provider: azurerm
         command: apply
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        environmentServiceNameAzureRM: ' env1914svc'
+        environmentServiceNameAzureRM: ' kunal-svc'
 

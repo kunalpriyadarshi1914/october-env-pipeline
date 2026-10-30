@@ -33,7 +33,7 @@ parameters:
     - 'chalega bhai'
     - 'nahi chalega bhai'
 
-pool: env-pool
+pool: kunal-pool
 
 stages:
 - stage: Scan
