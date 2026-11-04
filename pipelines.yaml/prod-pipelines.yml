@@ -70,8 +70,8 @@ stages:
         command: init
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
         backendServiceArm: 'shiva-svc'
-        backendAzureRmStorageAccountName: 'parastg1914'
-        backendAzureRmContainerName: 'parastgcontainer'
+        backendAzureRmStorageAccountName: 'hyd1914storage'
+        backendAzureRmContainerName: 'pipeline-container'
         backendAzureRmKey: 'prod.tfstate'
 
     - task: TerraformTask@5
@@ -128,8 +128,8 @@ stages:
         command: init
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
         backendServiceArm: 'shiva-svc'
-        backendAzureRmStorageAccountName: 'parastg1914'
-        backendAzureRmContainerName: 'parastgcontainer'
+        backendAzureRmStorageAccountName: 'hyd1914storage'
+        backendAzureRmContainerName: 'pipeline-container'
         backendAzureRmKey: 'prod.tfstate'
 
     - task: TerraformTask@5
