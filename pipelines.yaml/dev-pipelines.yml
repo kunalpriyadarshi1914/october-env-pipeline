@@ -35,56 +35,117 @@ parameters:
 
 pool: kunal-pool
 
+variables:
+  terraformWorkingDirectory: '$(Build.SourcesDirectory)/parent_modules/dev'
+  terraformVarFile: 'terraform.tfvars'
+
 stages:
+
+# =========================
+# STAGE 1: SECRET SCAN
+# =========================
+
 - stage: Scan
   displayName: 'Dev Secret Scan'
   condition: eq('${{ parameters.KyaScanChalega }}', 'chalega bhai')
+
   jobs:
   - job: DevScan
     steps:
     - checkout: self
+
     - task: PowerShell@2
+      displayName: 'Dev Trufflehog Scan'
       inputs:
         targetType: inline
         script: |
-          $path = "$(Build.SourcesDirectory)/parent_modules/dev"
-          if (!(Test-Path $path)) { throw "Dev directory not found" }
+          $path = "$(terraformWorkingDirectory)"
+
+          if (!(Test-Path $path)) {
+            throw "Dev directory not found: $path"
+          }
+
           trufflehog filesystem "$path" --results=verified,unknown
+
+# =========================
+# STAGE 2: TERRAFORM PLAN
+# =========================
 
 - stage: Plan
   displayName: 'Dev Terraform Init and Plan'
+
   dependsOn: Scan
+
   condition: |
     and(
       in(dependencies.Scan.result, 'Succeeded', 'Skipped'),
       eq('${{ parameters.KyaPlanChalega }}', 'chalega bhai')
     )
+
   jobs:
   - job: DevPlan
     steps:
+
     - checkout: self
+
+    # Check Terraform files
+
+    - task: PowerShell@2
+      displayName: 'Check Dev Terraform Files'
+      inputs:
+        targetType: inline
+        script: |
+          $path = "$(terraformWorkingDirectory)"
+          $varFile = "$path/$(terraformVarFile)"
+
+          Write-Host "Working Directory: $path"
+          Write-Host "Checking Terraform files..."
+
+          if (!(Test-Path $path)) {
+            throw "Dev directory not found"
+          }
+
+          if (!(Test-Path $varFile)) {
+            throw "Terraform variable file not found: $varFile"
+          }
+
+          Write-Host "terraform.tfvars FOUND"
+
+          Get-ChildItem $path
+
+    # Terraform Init
+
     - task: TerraformTask@5
       displayName: 'Dev Init'
       inputs:
         provider: azurerm
         command: init
-        workingDirectory: '$(Build.SourcesDirectory)/parent_modules/dev'
+        workingDirectory: '$(terraformWorkingDirectory)'
         backendServiceArm: 'shiva-svc'
         backendAzureRmStorageAccountName: 'hyd1914storage'
         backendAzureRmContainerName: 'pipeline-container'
         backendAzureRmKey: 'dev.tfstate'
+
+    # Terraform Plan
 
     - task: TerraformTask@5
       displayName: 'Dev Plan'
       inputs:
         provider: azurerm
         command: plan
-        workingDirectory: '$(Build.SourcesDirectory)/parent_modules/dev'
+        workingDirectory: '$(terraformWorkingDirectory)'
+        commandOptions: '-var-file="$(terraformVarFile)" -input=false'
         environmentServiceNameAzureRM: 'shiva-svc'
+
+# =========================
+# STAGE 3: MANUAL APPROVAL
+# =========================
 
 - stage: Approval
   displayName: 'Approve Dev Apply'
+
   dependsOn: Plan
+
   condition: |
     and(
       succeeded(),
@@ -92,10 +153,13 @@ stages:
       eq('${{ parameters.KyaPlanChalega }}', 'chalega bhai'),
       eq('${{ parameters.KyaApplyChalega }}', 'chalega bhai')
     )
+
   pool: server
+
   jobs:
   - job: DevApproval
     timeoutInMinutes: 1440
+
     steps:
     - task: ManualValidation@1
       timeoutInMinutes: 1440
@@ -105,11 +169,17 @@ stages:
         instructions: 'Approve Dev infrastructure changes.'
         onTimeout: reject
 
+# =========================
+# STAGE 4: TERRAFORM APPLY
+# =========================
+
 - stage: Apply
   displayName: 'Dev Terraform Apply'
+
   dependsOn:
     - Plan
     - Approval
+
   condition: |
     and(
       succeeded(),
@@ -117,26 +187,33 @@ stages:
       eq('${{ parameters.KyaPlanChalega }}', 'chalega bhai'),
       eq('${{ parameters.KyaApplyChalega }}', 'chalega bhai')
     )
+
   jobs:
   - job: DevApply
     steps:
+
     - checkout: self
+
+    # Terraform Init
+
     - task: TerraformTask@5
       displayName: 'Dev Init'
       inputs:
         provider: azurerm
         command: init
-        workingDirectory: '$(Build.SourcesDirectory)/parent_modules/dev'
+        workingDirectory: '$(terraformWorkingDirectory)'
         backendServiceArm: 'shiva-svc'
         backendAzureRmStorageAccountName: 'hyd1914storage'
         backendAzureRmContainerName: 'pipeline-container'
         backendAzureRmKey: 'dev.tfstate'
+
+    # Terraform Apply
 
     - task: TerraformTask@5
       displayName: 'Dev Apply'
       inputs:
         provider: azurerm
         command: apply
-        workingDirectory: '$(Build.SourcesDirectory)/parent_modules/dev'
+        workingDirectory: '$(terraformWorkingDirectory)'
+        commandOptions: '-var-file="$(terraformVarFile)" -input=false -auto-approve'
         environmentServiceNameAzureRM: 'shiva-svc'
-
