@@ -69,7 +69,7 @@ stages:
         provider: azurerm
         command: init
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        backendServiceArm: ' kunal-svc'
+        backendServiceArm: 'shiva-svc'
         backendAzureRmStorageAccountName: 'parastg1914'
         backendAzureRmContainerName: 'parastgcontainer'
         backendAzureRmKey: 'prod.tfstate'
@@ -80,7 +80,7 @@ stages:
         provider: azurerm
         command: plan
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        environmentServiceNameAzureRM: 'kunal-svc'
+        environmentServiceNameAzureRM: 'shiva-svc'
 
 - stage: Approval
   displayName: 'Approve Prod Apply'
@@ -127,7 +127,7 @@ stages:
         provider: azurerm
         command: init
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        backendServiceArm: ' kunal-svc'
+        backendServiceArm: 'shiva-svc'
         backendAzureRmStorageAccountName: 'parastg1914'
         backendAzureRmContainerName: 'parastgcontainer'
         backendAzureRmKey: 'prod.tfstate'
@@ -138,5 +138,5 @@ stages:
         provider: azurerm
         command: apply
         workingDirectory: '$(Build.SourcesDirectory)/parent_modules/prod'
-        environmentServiceNameAzureRM: ' kunal-svc'
+        environmentServiceNameAzureRM: 'shiva-svc'
 
